@@ -12,16 +12,19 @@
 #import "MWPhoto.h"
 #import "DACircularProgressView.h"
 #import "MWPhotoBrowserPrivate.h"
+#import "BTGlassScrollView.h"
+#import "SDImageCache.h"
+#import <InstagramEngine.h>
 
 // Private methods and properties
 @interface MWZoomingScrollView () {
     
     MWPhotoBrowser __weak *_photoBrowser;
 	MWTapDetectingView *_tapView; // for background taps
-	MWTapDetectingImageView *_photoImageView;
+    BTGlassScrollView *_photoImageView;
+//	MWTapDetectingImageView *_photoImageView;
 	DACircularProgressView *_loadingIndicator;
     UIImageView *_loadingError;
-    
 }
 
 @end
@@ -43,11 +46,14 @@
 		[self addSubview:_tapView];
 		
 		// Image view
-		_photoImageView = [[MWTapDetectingImageView alloc] initWithFrame:CGRectZero];
-		_photoImageView.tapDelegate = self;
+        
+//		_photoImageView = [[MWTapDetectingImageView alloc] initWithFrame:_photoBrowser.view.bounds];
+        _photoImageView = [[BTGlassScrollView alloc] initWithFrame:_photoBrowser.view.bounds BackgroundImage:nil blurredImage:nil viewDistanceFromBottom:120 foregroundView:nil parentView:self];
+        
+//		_photoImageView.tapDelegate = self;
 		_photoImageView.contentMode = UIViewContentModeCenter;
 		_photoImageView.backgroundColor = [UIColor blackColor];
-		[self addSubview:_photoImageView];
+        [self addSubview:_photoImageView];
 		
 		// Loading indicator
 		_loadingIndicator = [[DACircularProgressView alloc] initWithFrame:CGRectMake(140.0f, 30.0f, 40.0f, 40.0f)];
@@ -90,8 +96,15 @@
     self.photo = nil;
     self.captionView = nil;
     self.selectedButton = nil;
-    _photoImageView.image = nil;
+    self.backButton = nil;
+//    _photoImageView.image = nil;
+    _photoImageView.blurredBackgroundImage = nil;
+    [_photoImageView setBackgroundImage:nil overWriteBlur:NO animated:NO duration:0.0f];
     _index = NSUIntegerMax;
+}
+
+- (MWPhotoBrowser*)getPhotoBrowser {
+    return _photoBrowser;
 }
 
 #pragma mark - Image
@@ -104,6 +117,8 @@
         }
     }
     _photo = photo;
+    if (photo)
+        _photoImageView.photo = photo;
     UIImage *img = [_photoBrowser imageForPhoto:_photo];
     if (img) {
         [self displayImage];
@@ -113,15 +128,19 @@
     }
 }
 
+- (void)displayMapView {
+    [_photoImageView addMapView];
+}
+
 // Get and display image
 - (void)displayImage {
-	if (_photo && _photoImageView.image == nil) {
+	if (_photo && _photoImageView.backgroundImage == nil) {
 		
 		// Reset
 		self.maximumZoomScale = 1;
 		self.minimumZoomScale = 1;
-		self.zoomScale = 1;
-		self.contentSize = CGSizeMake(0, 0);
+//		self.zoomScale = 1;
+//		self.contentSize = CGSizeMake(0, 0);
 		
 		// Get image from browser as it handles ordering of fetching
 		UIImage *img = [_photoBrowser imageForPhoto:_photo];
@@ -131,15 +150,18 @@
 			[self hideLoadingIndicator];
 			
 			// Set image
-			_photoImageView.image = img;
+//			_photoImageView.image = img;
+            [_photoImageView setBackgroundImage:img overWriteBlur:NO animated:NO duration:0.0f];
+            [_photoImageView setBlurNeedDisplay:img];
+            [_photoImageView resetForegroundOffset];
 			_photoImageView.hidden = NO;
 			
 			// Setup photo frame
 			CGRect photoImageViewFrame;
 			photoImageViewFrame.origin = CGPointZero;
 			photoImageViewFrame.size = img.size;
-			_photoImageView.frame = photoImageViewFrame;
-			self.contentSize = photoImageViewFrame.size;
+//			_photoImageView.frame = photoImageViewFrame;
+//            self.contentSize = _photoImageView.frame.size;
 
 			// Set zoom to minimum zoom
 			[self setMaxMinZoomScalesForCurrentBounds];
@@ -157,7 +179,9 @@
 // Image failed so just show black!
 - (void)displayImageFailure {
     [self hideLoadingIndicator];
-    _photoImageView.image = nil;
+//    _photoImageView.image = nil;
+    _photoImageView.blurredBackgroundImage = nil;
+    [_photoImageView setBackgroundImage:nil overWriteBlur:NO animated:NO duration:0.0f];
     if (!_loadingError) {
         _loadingError = [UIImageView new];
         _loadingError.image = [UIImage imageNamed:@"MWPhotoBrowser.bundle/images/ImageError.png"];
@@ -196,7 +220,7 @@
 }
 
 - (void)showLoadingIndicator {
-    self.zoomScale = 0;
+//    self.zoomScale = 0;
     self.minimumZoomScale = 0;
     self.maximumZoomScale = 0;
     _loadingIndicator.progress = 0;
@@ -211,7 +235,7 @@
     if (_photoImageView && _photoBrowser.zoomPhotosToFill) {
         // Zoom image to fill if the aspect ratios are fairly similar
         CGSize boundsSize = self.bounds.size;
-        CGSize imageSize = _photoImageView.image.size;
+        CGSize imageSize = _photoImageView.backgroundImage.size;
         CGFloat boundsAR = boundsSize.width / boundsSize.height;
         CGFloat imageAR = imageSize.width / imageSize.height;
         CGFloat xScale = boundsSize.width / imageSize.width;    // the scale needed to perfectly fit the image width-wise
@@ -231,17 +255,17 @@
 	// Reset
 	self.maximumZoomScale = 1;
 	self.minimumZoomScale = 1;
-	self.zoomScale = 1;
+//	self.zoomScale = 1;
 	
 	// Bail if no image
-	if (_photoImageView.image == nil) return;
+	if (_photoImageView.backgroundImage == nil) return;
     
 	// Reset position
 	_photoImageView.frame = CGRectMake(0, 0, _photoImageView.frame.size.width, _photoImageView.frame.size.height);
 	
 	// Sizes
     CGSize boundsSize = self.bounds.size;
-    CGSize imageSize = _photoImageView.image.size;
+    CGSize imageSize = _photoImageView.backgroundImage.size;
     
     // Calculate Min
     CGFloat xScale = boundsSize.width / imageSize.width;    // the scale needed to perfectly fit the image width-wise
@@ -261,20 +285,20 @@
 	}
 	
 	// Set min/max zoom
-	self.maximumZoomScale = maxScale;
-	self.minimumZoomScale = minScale;
+//	self.maximumZoomScale = maxScale;
+//	self.minimumZoomScale = minScale;
     
     // Initial zoom
-    self.zoomScale = [self initialZoomScaleWithMinScale];
+//    self.zoomScale = [self initialZoomScaleWithMinScale];
     
     // If we're zooming to fill then centralise
-    if (self.zoomScale != minScale) {
-        // Centralise
-        self.contentOffset = CGPointMake((imageSize.width * self.zoomScale - boundsSize.width) / 2.0,
-                                         (imageSize.height * self.zoomScale - boundsSize.height) / 2.0);
-        // Disable scrolling initially until the first pinch to fix issues with swiping on an initally zoomed in photo
-        self.scrollEnabled = NO;
-    }
+//    if (self.zoomScale != minScale) {
+//        // Centralise
+//        self.contentOffset = CGPointMake((imageSize.width * self.zoomScale - boundsSize.width) / 2.0,
+//                                         (imageSize.height * self.zoomScale - boundsSize.height) / 2.0);
+//        // Disable scrolling initially until the first pinch to fix issues with swiping on an initally zoomed in photo
+//        self.scrollEnabled = NO;
+//    }
     
     // Layout
 	[self setNeedsLayout];

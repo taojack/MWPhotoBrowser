@@ -12,10 +12,14 @@
 #import "MWPhotoBrowserPrivate.h"
 #import "SDImageCache.h"
 
-#define PADDING                  10
+#define PADDING                  1
 #define ACTION_SHEET_OLD_ACTIONS 2000
 
 @implementation MWPhotoBrowser
+
+- (NSMutableArray*)getPhotoArray {
+    return _photos;
+}
 
 #pragma mark - Init
 
@@ -306,7 +310,8 @@
 	_pagingScrollView.contentOffset = [self contentOffsetForPageAtIndex:_currentPageIndex];
     [self tilePages];
     _performingLayout = NO;
-    
+
+    [self.navigationController setNavigationBarHidden:YES];
 }
 
 // Release any retained subviews of the main view.
@@ -339,6 +344,28 @@
     } else {
         return NO;
     }
+}
+
+
+- (UIButton *)createBackButtonOnPage:(MWZoomingScrollView*)page atIndex:(NSUInteger)index
+{
+    UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(CGRectGetWidth([UIScreen mainScreen].bounds) - 60 - 10, 20, 60, 32)];
+    [backButton setTitle:NSLocalizedString(@"Done", @"Title for Done button") forState:UIControlStateNormal];
+    backButton.layer.cornerRadius = 3.0f;
+    backButton.layer.borderColor = [UIColor colorWithWhite:0.9 alpha:0.9].CGColor;
+    backButton.layer.borderWidth = 1.0f;
+    [backButton setBackgroundColor:[UIColor colorWithWhite:0.1 alpha:0.5]];
+    [backButton setTitleColor:[UIColor colorWithWhite:0.9 alpha:0.9] forState:UIControlStateNormal];
+    [backButton setTitleColor:[UIColor colorWithWhite:0.9 alpha:0.9] forState:UIControlStateHighlighted];
+    [backButton.titleLabel setFont:[UIFont boldSystemFontOfSize:14.0f]];
+    
+    [backButton addTarget:self action:@selector(doneButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+    
+    page.backButton = backButton;
+    page.backButton.frame = [self frameForBackButton:page.backButton atIndex:index];
+    [_pagingScrollView addSubview:page.backButton];
+    
+    return backButton;
 }
 
 #pragma mark - Appearance
@@ -378,7 +405,7 @@
     if (!_viewIsActive && [self.navigationController.viewControllers objectAtIndex:0] != self) {
         [self storePreviousNavBarAppearance];
     }
-    [self setNavBarAppearance:animated];
+//    [self setNavBarAppearance:animated];
     
     // Update UI
 	[self hideControlsAfterDelay];
@@ -538,6 +565,8 @@
             page.selectedButton.frame = [self frameForSelectedButton:page.selectedButton atIndex:index];
         }
         
+        page.backButton.frame = [self frameForBackButton:page.backButton atIndex:index];
+        
         // Adjust scales if bounds has changed since last time
         if (!CGRectEqualToRect(_previousLayoutBounds, self.view.bounds)) {
             // Update zooms for new bounds
@@ -598,7 +627,7 @@
 	_rotating = NO;
     // Ensure nav bar isn't re-displayed
     if ([self areControlsHidden]) {
-        self.navigationController.navigationBarHidden = NO;
+//        self.navigationController.navigationBarHidden = NO;
         self.navigationController.navigationBar.alpha = 0;
     }
 }
@@ -798,6 +827,7 @@
 			[_recycledPages addObject:page];
             [page.captionView removeFromSuperview];
             [page.selectedButton removeFromSuperview];
+            [page.backButton removeFromSuperview];
             [page prepareForReuse];
 			[page removeFromSuperview];
 			MWLog(@"Removed page at index %lu", (unsigned long)pageIndex);
@@ -844,6 +874,8 @@
                 selectedButton.selected = [self photoIsSelectedAtIndex:index];
             }
             
+            [self createBackButtonOnPage:page atIndex:index];
+
 		}
 	}
 	
@@ -1021,6 +1053,15 @@
     return CGRectIntegral(captionFrame);
 }
 
+- (CGRect)frameForBackButton:(UIButton *)backButton atIndex:(NSUInteger)index {
+    CGRect pageFrame = [self frameForPageAtIndex:index];
+    CGRect captionFrame = CGRectMake(pageFrame.origin.x + pageFrame.size.width - 60 - 10,
+                                     20,
+                                     backButton.frame.size.width,
+                                     backButton.frame.size.height);
+    return CGRectIntegral(captionFrame);
+}
+
 #pragma mark - UIScrollView Delegate
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
@@ -1087,6 +1128,12 @@
 	_nextButton.enabled = (_currentPageIndex < numberOfPhotos - 1);
     _actionButton.enabled = [[self photoAtIndex:_currentPageIndex] underlyingImage] != nil;
 	
+    // Fix the condition where scrollView scroll half way and didn't move to the next page
+    if (_visiblePages.count == 1) {
+        MWZoomingScrollView *visiblePage = [_visiblePages anyObject];
+        [visiblePage displayMapView];
+    }
+    
 }
 
 - (void)jumpToPageAtIndex:(NSUInteger)index animated:(BOOL)animated {
@@ -1355,6 +1402,10 @@
                 newFrame.origin.x = v.frame.origin.x;
                 v.frame = newFrame;
             }
+            
+            CGRect newBackButtonFrame = [self frameForBackButton:page.backButton atIndex:0];
+            newBackButtonFrame.origin.x = page.backButton.frame.origin.x;
+            page.backButton.frame = newBackButtonFrame;
         }
 
     } completion:^(BOOL finished) {}];

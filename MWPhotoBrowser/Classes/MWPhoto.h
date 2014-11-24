@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <Parse.h>
 #import "MWPhotoProtocol.h"
 
 // This class models a photo/image and it's caption
@@ -19,6 +20,20 @@
 @property (nonatomic, readonly) UIImage *image;
 @property (nonatomic, readonly) NSURL *photoURL;
 @property (nonatomic, readonly) NSString *filePath  __attribute__((deprecated("Use photoURL"))); // Depreciated
+
+@property (nonatomic, strong) NSString *albumTitle;
+@property (nonatomic, strong) NSString *photoDescription;
+@property (nonatomic, strong) NSString *locationName;
+@property (nonatomic, strong) NSString *latitude;
+@property (nonatomic, strong) NSString *longitude;
+@property (nonatomic, strong) NSString *commentCount;
+@property (nonatomic, strong) NSString *likeCount;
+@property (nonatomic, strong) NSMutableArray *comments;
+@property (nonatomic, strong) NSMutableArray *likes;
+@property (nonatomic) BOOL isUserActionLoad;
+@property (nonatomic, strong) PFObject *userLikeObject;
+@property (nonatomic, strong) PFObject *object;
+
 
 + (MWPhoto *)photoWithImage:(UIImage *)image;
 + (MWPhoto *)photoWithFilePath:(NSString *)path  __attribute__((deprecated("Use photoWithURL: with a file URL"))); // Depreciated

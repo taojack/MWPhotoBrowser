@@ -21,11 +21,14 @@
 @property (nonatomic) id <MWPhoto> photo;
 @property (nonatomic, weak) MWCaptionView *captionView;
 @property (nonatomic, weak) UIButton *selectedButton;
+@property (nonatomic, weak) UIButton *backButton;
 
 - (id)initWithPhotoBrowser:(MWPhotoBrowser *)browser;
 - (void)displayImage;
 - (void)displayImageFailure;
 - (void)setMaxMinZoomScalesForCurrentBounds;
 - (void)prepareForReuse;
+- (MWPhotoBrowser*)getPhotoBrowser;
+- (void)displayMapView;
 
 @end
