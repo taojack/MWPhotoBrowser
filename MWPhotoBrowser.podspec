@@ -37,6 +37,6 @@ Pod::Spec.new do |s|
     s.requires_arc = true
     s.frameworks = 'MessageUI', 'ImageIO', 'QuartzCore', 'AssetsLibrary', 'MapKit'
     s.dependency 'SDWebImage', '~> 3.7.1’
-    s.dependency 'MBProgressHUD', '~> 0.8'
     s.dependency 'DACircularProgress'
+    s.dependency 'MBProgressHUD', '~> 0.8'
 end
