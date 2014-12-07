@@ -52,6 +52,7 @@
 @property (nonatomic) BOOL startOnGrid;
 @property (nonatomic) NSUInteger delayToHideElements;
 @property (nonatomic, readonly) NSUInteger currentIndex;
+@property (nonatomic) PFUser *profileUser;
 
 - (NSMutableArray*)getPhotoArray;
 
