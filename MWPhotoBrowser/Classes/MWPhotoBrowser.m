@@ -349,15 +349,17 @@
 
 - (UIButton *)createBackButtonOnPage:(MWZoomingScrollView*)page atIndex:(NSUInteger)index
 {
-    UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(CGRectGetWidth([UIScreen mainScreen].bounds) - 60 - 10, 20, 60, 32)];
-    [backButton setTitle:NSLocalizedString(@"Done", @"Title for Done button") forState:UIControlStateNormal];
+    UIButton *backButton = [[UIButton alloc] initWithFrame:CGRectMake(CGRectGetWidth([UIScreen mainScreen].bounds) + 60 + 10, 20, 60, 32)];
+    UIImage *backImg = [UIImage imageNamed:@"BackArrow"];
+    [backButton setImage:[UIImage imageWithCGImage:[backImg CGImage] scale:2.0 orientation:UIImageOrientationUp] forState:UIControlStateNormal];
+//    [backButton setTitle:NSLocalizedString(@"Done", @"Title for Done button") forState:UIControlStateNormal];
     backButton.layer.cornerRadius = 3.0f;
     backButton.layer.borderColor = [UIColor colorWithWhite:0.9 alpha:0.9].CGColor;
     backButton.layer.borderWidth = 1.0f;
     [backButton setBackgroundColor:[UIColor colorWithWhite:0.1 alpha:0.5]];
-    [backButton setTitleColor:[UIColor colorWithWhite:0.9 alpha:0.9] forState:UIControlStateNormal];
-    [backButton setTitleColor:[UIColor colorWithWhite:0.9 alpha:0.9] forState:UIControlStateHighlighted];
-    [backButton.titleLabel setFont:[UIFont boldSystemFontOfSize:14.0f]];
+//    [backButton setTitleColor:[UIColor colorWithWhite:0.9 alpha:0.9] forState:UIControlStateNormal];
+//    [backButton setTitleColor:[UIColor colorWithWhite:0.9 alpha:0.9] forState:UIControlStateHighlighted];
+//    [backButton.titleLabel setFont:[UIFont boldSystemFontOfSize:14.0f]];
     
     [backButton addTarget:self action:@selector(doneButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     
@@ -1055,7 +1057,7 @@
 
 - (CGRect)frameForBackButton:(UIButton *)backButton atIndex:(NSUInteger)index {
     CGRect pageFrame = [self frameForPageAtIndex:index];
-    CGRect captionFrame = CGRectMake(pageFrame.origin.x + pageFrame.size.width - 60 - 10,
+    CGRect captionFrame = CGRectMake(pageFrame.origin.x + 10,
                                      20,
                                      backButton.frame.size.width,
                                      backButton.frame.size.height);
@@ -1477,7 +1479,7 @@
 
 - (void)doneButtonPressed:(id)sender {
     // Only if we're modal and there's a done button
-    if (_doneButton) {
+    if (_doneButton || [sender isKindOfClass:[UIButton class]]) {
         // See if we actually just want to show/hide grid
         if (self.enableGrid) {
             if (self.startOnGrid && !_gridController) {
