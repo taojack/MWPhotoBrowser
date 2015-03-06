@@ -75,4 +75,7 @@
 
 - (void)actionButtonPressed:(id)sender;
 
+- (void)disablePagingScroll;
+- (void)enablePagingScroll;
+
 @end
