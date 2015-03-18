@@ -554,7 +554,9 @@
     _skipNextPagingScrollViewPositioning = NO;
 	
 	// Recalculate contentSize based on current orientation
-	_pagingScrollView.contentSize = [self contentSizeForPagingScrollView];
+    if (_pagingScrollView.contentSize.width > 0) {
+        _pagingScrollView.contentSize = [self contentSizeForPagingScrollView];
+    }
 	
 	// Adjust frames and configuration of each visible page
 	for (MWZoomingScrollView *page in _visiblePages) {
@@ -1012,6 +1014,14 @@
     // We have to use the paging scroll view's bounds to calculate the contentSize, for the same reason outlined above.
     CGRect bounds = _pagingScrollView.bounds;
     return CGSizeMake(bounds.size.width * [self numberOfPhotos], bounds.size.height);
+}
+
+- (void)disablePagingScroll {
+    [_pagingScrollView setScrollEnabled:NO];
+}
+
+- (void)enablePagingScroll {
+    [_pagingScrollView setScrollEnabled:YES];
 }
 
 - (CGPoint)contentOffsetForPageAtIndex:(NSUInteger)index {
