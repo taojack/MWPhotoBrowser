@@ -179,9 +179,8 @@
 // Image failed so just show black!
 - (void)displayImageFailure {
     [self hideLoadingIndicator];
-//    _photoImageView.image = nil;
     _photoImageView.blurredBackgroundImage = nil;
-    [_photoImageView setBackgroundImage:nil overWriteBlur:NO animated:NO duration:0.0f];
+    [_photoImageView setBackgroundImage:[UIImage imageNamed:@"MWPhotoBrowser.bundle/images/placeholder.png"] overWriteBlur:NO animated:NO duration:0.0f];
     if (!_loadingError) {
         _loadingError = [UIImageView new];
         _loadingError.image = [UIImage imageNamed:@"MWPhotoBrowser.bundle/images/ImageError.png"];
