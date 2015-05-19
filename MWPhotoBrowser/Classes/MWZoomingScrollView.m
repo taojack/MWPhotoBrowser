@@ -98,8 +98,8 @@
     self.selectedButton = nil;
     self.backButton = nil;
 //    _photoImageView.image = nil;
-    _photoImageView.blurredBackgroundImage = nil;
     [_photoImageView setBackgroundImage:nil overWriteBlur:NO animated:NO duration:0.0f];
+    [_photoImageView resetZoom];
     _index = NSUIntegerMax;
 }
 
